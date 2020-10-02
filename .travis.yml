@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t ramtinhr/react-test -f ./client/Dockerfile.dev ./client
+  
+script:
+  - docker run ramtinhr/react-test -- --coverage
+
+after_success:
+  - docker build -t ramtinhr/multi-client ./client 
+  - docker build -t ramtinhr/multi-nginx ./nginx 
+  - docker build -t ramtinhr/multi-server ./server
+  - docker build -t ramtinhr/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push ramtinhr/multi-client
+  - docker push ramtinhr/multi-nginx
+  - docker push ramtinhr/multi-server
+  - docker push ramtinhr/multi-worker
